@@ -1,8 +1,8 @@
 import { Application } from 'express';
-import homeRouters from './homeRouters';
+import authRouters from './authRouters';
 
 const initWebRoutes = (app: Application) => {
-  app.use('/', homeRouters);
+  app.use('/api', authRouters);
 };
 
 export default initWebRoutes;

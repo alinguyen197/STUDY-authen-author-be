@@ -19,10 +19,20 @@ module.exports = {
 => npx sequelize-cli init
 
 👉 3. Tạo model - tương đương tạo table:
+
+<pre><code>
+// khi tạo model sẽ sinh ra file migrate
 npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string
+</code></pre>
+
+<pre><code>
+// tạo ra file thủ công
+npx sequelize-cli migration:generate --name add-isactive-to-user 
+</code></pre>
 
 👉 4: Tạo migrations: để tự động map table vào database
 npx sequelize-cli db:migrate
+npx sequelize-cli db:migrate:undo
 
 👉5. Tạo Seeder (tạo data) : npx sequelize-cli seed:generate --name demo-user
 
