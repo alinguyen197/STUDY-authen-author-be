@@ -1,3 +1,5 @@
+https://sequelize.org/docs/v6/other-topics/migrations/
+
 # Setup cài sequelize và cấu hình database
 
 👉 1. Cài đặt các thư viện: sequlize-cli, sequelize và mysql2

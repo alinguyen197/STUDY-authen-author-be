@@ -1,8 +1,9 @@
 import express, { Application } from 'express';
 import dotenv from 'dotenv';
-import { connectDB } from './config/connectDB';
+
 import initWebRoutes from './routes';
 import cors from 'cors';
+import { connectDB } from './config/connectDB';
 
 dotenv.config();
 const app: Application = express();
@@ -11,8 +12,7 @@ app.use(express.json());
 
 initWebRoutes(app); // Khởi tạo các route từ src/routes/index.ts
 
-connectDB(); // Kết nối đến database
-
+connectDB(); // Kết nối database
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {

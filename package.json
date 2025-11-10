@@ -6,7 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node-dev src/server.ts",
-    "prepare": "husky"
+    "build": "tsc",
+    "prepare": "husky",
+    "db:migrate": "npm run build && npx sequelize-cli db:migrate",
+    "db:migrate:undo": "npm run build && npx sequelize-cli db:migrate:undo"
   },
   "keywords": [],
   "author": "",
@@ -18,10 +21,9 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^2.2.5",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.6.2"
+    "sequelize-typescript": "^2.1.6"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
