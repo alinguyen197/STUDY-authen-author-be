@@ -1,7 +1,8 @@
 const path = require('path');
 module.exports = {
-  'config': path.resolve('./src/config', 'config.json'),
-  'migrations-path': path.resolve('./src', 'migrations'),
+  // npm run db:migrate nó không chạy đc ts , strict lỏ dùng dist
+  config: path.resolve('dist/config/database.js'),
   'models-path': path.resolve('./src', 'models'),
-  'seeders-path': path.resolve('./src', 'seeders')
-}
+  'seeders-path': path.resolve('./src/db', 'seeders'),
+  'migrations-path': path.resolve('./src/db', 'migrations'),
+};

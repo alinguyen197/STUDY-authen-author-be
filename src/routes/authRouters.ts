@@ -1,11 +1,11 @@
 import express from 'express';
-import homeController from '../controllers/homeController';
+import authController from '../controllers/authController';
 const router = express.Router();
 
 // router.get('/home', (req, res) => {
 //   res.send('Welcome to the Home Page!');
 // });
 
-router.get('/home', homeController.getAllUsers);
+router.post('/login', authController.login);
 
 export default router;
