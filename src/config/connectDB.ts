@@ -9,7 +9,5 @@ export const connectDB = async () => {
     // hoặc { force: true } để xoá & tạo lại toàn bộ bảng (cẩn thận khi dùng)
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error);
-  } finally {
-    await sequelize.close();
   }
 };
