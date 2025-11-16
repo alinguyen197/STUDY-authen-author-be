@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import initWebRoutes from './routes';
 import cors from 'cors';
 import { connectDB } from './config/connectDB';
+import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
 const app: Application = express();
@@ -18,6 +19,8 @@ initWebRoutes(app); // Khởi tạo các route từ src/routes/index.ts
 
 connectDB(); // Kết nối database
 const PORT = process.env.PORT || 4000;
+
+app.use(errorHandler); // Sử dụng middleware xử lý lỗi
 
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
