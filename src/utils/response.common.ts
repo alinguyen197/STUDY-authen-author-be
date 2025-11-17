@@ -1,10 +1,5 @@
 import { Response } from 'express';
 import { ApiResponse } from '../interfaces/response.interface';
-import {
-  ValidationError,
-  UniqueConstraintError,
-  DatabaseError,
-} from 'sequelize';
 
 export class ApiResponder {
   static success<T>(
@@ -24,13 +19,7 @@ export class ApiResponder {
     return res.status(statusCode).json(response);
   }
 
-  static error(
-    res: Response,
-    error: any,
-    message = 'Error',
-    statusCode = 500,
-    type = 'ServerError'
-  ) {
+  static error(res: Response, error: any, message = 'Error', statusCode = 500) {
     // kiểm tra đang ở môi trường nào để hạn chế quăng lỗi trên môi trường production
     const isDev = process.env.NODE_ENV !== 'production';
 
@@ -39,33 +28,30 @@ export class ApiResponder {
       statusCode,
       message,
       data: null,
-      errors: {
-        type,
-        details: isDev ? error : undefined,
-      },
+      errors: isDev ? error : undefined,
     };
 
     return res.status(statusCode).json(response);
   }
 
   static validationError(res: Response, details: any) {
-    return this.error(res, details, 'Validation error', 400, 'ValidationError');
+    return this.error(res, details, 'Validation error', 400);
   }
 
   static notFound(res: Response, message = 'Not found') {
-    return this.error(res, null, message, 404, 'NotFoundError');
+    return this.error(res, null, message, 404);
   }
 
   static unauthorized(res: Response, message = 'Unauthorized') {
-    return this.error(res, null, message, 401, 'AuthError');
+    return this.error(res, null, message, 401);
   }
 
   static forbidden(res: Response, message = 'Forbidden') {
-    return this.error(res, null, message, 403, 'AuthorizationError');
+    return this.error(res, null, message, 403);
   }
 
   static dbError(res: Response, error: any) {
-    return this.error(res, error, 'Database error', 500, 'DatabaseError');
+    return this.error(res, error, 'Database error', 500);
   }
 
   static pagination<T>(

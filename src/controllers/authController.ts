@@ -7,7 +7,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     // Lấy dữ liệu từ request body
     const data: IUser = req.body;
     const user = await authServices.handleLogin(data);
-    return ApiResponder.success(res, user, 'Login successful');
+    return ApiResponder.success(res, user);
   } catch (error: any) {
     next(error);
   }

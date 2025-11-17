@@ -1,12 +1,13 @@
+import { TokenExpiredError } from 'jsonwebtoken'
 import {
   DatabaseError,
   UniqueConstraintError,
   ValidationError,
-} from 'sequelize';
+} from 'sequelize'
 
 export const parseError = (error: any) => {
   if (!error)
-    return { type: 'UnknownError', message: 'Unknown error', details: null };
+    return { type: 'UnknownError', message: 'Unknown error', details: null }
 
   if (
     error instanceof ValidationError ||
@@ -20,7 +21,7 @@ export const parseError = (error: any) => {
         message: e.message,
         value: e.value,
       })),
-    };
+    }
   }
 
   if (
@@ -35,7 +36,7 @@ export const parseError = (error: any) => {
         message: e.message,
         value: e.value,
       })),
-    };
+    }
   }
 
   if (
@@ -46,13 +47,24 @@ export const parseError = (error: any) => {
       type: 'DatabaseError',
       message: error.message,
       details: error.parent,
-    };
+    }
+  }
+
+  if (
+    error instanceof TokenExpiredError ||
+    error.name === 'TokenExpiredError'
+  ) {
+    return {
+      type: 'TokenExpiredError',
+      message: error.message,
+      expiredAt: error.expiredAt,
+    }
   }
 
   if (error instanceof Error) {
-    return { type: 'Error', message: error.message, details: null };
+    return { type: 'Error', message: error.message, details: null }
   }
 
   // Fallback
-  return { type: 'UnknownError', message: String(error), details: error };
-};
+  return { type: 'UnknownError', message: String(error), details: error }
+}

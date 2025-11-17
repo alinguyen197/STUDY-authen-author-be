@@ -20,7 +20,8 @@ initWebRoutes(app); // Khởi tạo các route từ src/routes/index.ts
 connectDB(); // Kết nối database
 const PORT = process.env.PORT || 4000;
 
-app.use(errorHandler); // Sử dụng middleware xử lý lỗi
+// Sử dụng middleware xử lý tất cả các lỗi chung
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
