@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { parseError } from '../utils'
+import { ApiResponder, parseError } from '../utils'
 
 const JWT_KEY = process.env.JWT_KEY || 'your_secret_key'
 
@@ -17,9 +17,11 @@ export const authenticateJWT = (
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ success: false, message: 'No token provided' })
+    // return ApiResponder.unauthorized(res, 'No token provided')
+    throw {
+      type: 'TokenExpiredError',
+      message: 'No token provided',
+    }
   }
 
   const token = authHeader.split(' ')[1]

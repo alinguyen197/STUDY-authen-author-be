@@ -3,7 +3,6 @@ import userService from '../services/userService'
 import { ApiResponder } from '../utils'
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // console.log(req)
     const users = await userService.getAllUsers()
 
     return ApiResponder.success(res, users)

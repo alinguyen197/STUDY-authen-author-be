@@ -55,11 +55,11 @@ const handleLogin = (data: IUser) => {
       const JWT_KEY = process.env.JWT_KEY || 'your_secret_key'
       const payload = { id: user?.id, email: user?.email }
       const token = jwt.sign(payload, JWT_KEY, {
-        expiresIn: '30s',
+        expiresIn: '5m',
       })
 
       resolve({
-        payload,
+        ...payload,
         token,
       })
     } catch (error: any) {
