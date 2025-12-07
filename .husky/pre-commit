@@ -4,4 +4,5 @@
 echo "🔍 Running type check..."
 npx tsc --noEmit
 
-
+echo "🎨 Running prettier and lint..."
+npx lint-staged

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { ApiResponder } from '../utils/response.common'
+import { EHttpStatuses } from '../utils/contants'
 
 export const errorHandler = (
   err: any,
@@ -24,9 +25,19 @@ export const errorHandler = (
       return ApiResponder.forbidden(res, err.message)
 
     case 'TokenExpiredError':
-      return ApiResponder.error(res, err, 'Unauthorized', 401)
+      return ApiResponder.error(
+        res,
+        err,
+        'Unauthorized',
+        EHttpStatuses.Unauthorized
+      )
 
     default:
-      return ApiResponder.error(res, err, 'Unexpected error', 500)
+      return ApiResponder.error(
+        res,
+        err,
+        'Unexpected error',
+        EHttpStatuses.InternalServerError
+      )
   }
 }
