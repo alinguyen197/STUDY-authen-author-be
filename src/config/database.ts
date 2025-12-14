@@ -14,5 +14,6 @@ module.exports = {
     host,
     port,
     dialect: 'postgres',
+    logging: false,
   },
 };
