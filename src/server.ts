@@ -5,6 +5,9 @@ import initWebRoutes from './routes'
 import cors from 'cors'
 import { connectDB } from './config/connectDB'
 import { errorHandler } from './middlewares/errorHandler'
+import redisClient from './config/redis'
+
+const PORT = process.env.PORT || 4000
 
 dotenv.config()
 const app: Application = express()
@@ -18,7 +21,8 @@ app.use(express.urlencoded({ extended: true }))
 initWebRoutes(app) // Khởi tạo các route từ src/routes/index.ts
 
 connectDB() // Kết nối database
-const PORT = process.env.PORT || 4000
+
+redisClient.ping() // kết nối database Redis
 
 // Sử dụng middleware xử lý tất cả các lỗi chung
 app.use(errorHandler)
