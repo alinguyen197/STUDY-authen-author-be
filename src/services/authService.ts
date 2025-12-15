@@ -1,5 +1,5 @@
 import { IUser } from '../interfaces'
-import { User } from '../models/user.model'
+import User from '../models/user.model'
 import { ApiResponder } from '../utils/response.common'
 import { checkFormatEmail } from '../utils'
 import { parseError } from '../utils/parseError.common'
@@ -52,9 +52,9 @@ const handleLogin = (data: IUser) => {
           message: 'Invalid password',
         })
       }
-      const JWT_KEY = process.env.JWT_KEY || 'your_secret_key'
+      const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'your_secret_key'
       const payload = { id: user?.id, email: user?.email }
-      const token = jwt.sign(payload, JWT_KEY, {
+      const token = jwt.sign(payload, JWT_SECRET_KEY, {
         expiresIn: '5m',
       })
 

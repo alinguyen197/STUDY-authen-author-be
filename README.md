@@ -86,6 +86,8 @@ npx sequelize-cli db:migrate:undo
 8. Return tokens to client
 
 <b>📊 Tính năng đã triển khai </b>
+
+<pre>
 ✅ OTP Login:
 1 Đăng nhập bằng mã OTP qua email
 2 Rate Limiting: Giới hạn OTP requests (5/15 phút)
@@ -106,3 +108,4 @@ npx sequelize-cli db:migrate:undo
 ✅ Secure Cookies: httpOnly, SameSite, secure trên production
 ✅ Token Hashing: Hash SHA-256 trước khi lưu DB
 ✅ Audit trail với trường replacedBy
+</pre>

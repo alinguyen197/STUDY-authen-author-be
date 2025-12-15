@@ -1,7 +1,7 @@
-import { sequelize } from '../models'
+import db from '../models'
 export const connectDB = async () => {
   try {
-    await sequelize.authenticate() // Kiểm tra kết nối
+    await db.sequelize.authenticate() // Kiểm tra kết nối
     console.log('✅ Database connected!')
 
     // Tự động tạo bảng nếu chưa có

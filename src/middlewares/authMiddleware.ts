@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { ApiResponder, parseError } from '../utils'
 
-const JWT_KEY = process.env.JWT_KEY || 'your_secret_key'
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'your_secret_key'
 
 // Extend Request để có user
 interface AuthRequest extends Request {
@@ -27,7 +27,7 @@ export const authenticateJWT = (
   const token = authHeader.split(' ')[1]
 
   try {
-    const decoded = jwt.verify(token, JWT_KEY)
+    const decoded = jwt.verify(token, JWT_SECRET_KEY)
     req.user = decoded // attach payload vào req.user
     // để nó chạy tiếp qua thằng controller vì đây middleware
     next()
