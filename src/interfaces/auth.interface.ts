@@ -10,3 +10,31 @@ interface JwtPayload {
 interface AuthRequest extends Request {
   user?: JwtPayload
 }
+
+export interface TokenPayload {
+  userId: number
+  email: string
+  iat?: number
+  exp?: number
+}
+
+export interface RefreshTokenData {
+  userId: number
+  deviceInfo?: string
+  ipAddress?: string
+}
+
+export interface OTPData {
+  userId: number
+  email: string
+}
+
+export interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  user: {
+    id: number
+    email: string
+    username: string
+  }
+}

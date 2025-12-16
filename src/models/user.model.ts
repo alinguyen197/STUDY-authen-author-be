@@ -17,7 +17,7 @@ class User extends Model {
   static associate(models: any) {
     User.hasMany(models.RefreshToken, {
       foreignKey: 'userId',
-      // as: 'refreshTokens',
+      as: 'refreshTokens',
     })
   }
 

@@ -13,7 +13,7 @@ class Otp extends Model {
   static associate(models: any) {
     Otp.belongsTo(models.User, {
       foreignKey: 'userId',
-      // as: 'user',
+      as: 'user',
     })
   }
 

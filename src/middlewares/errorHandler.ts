@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { ApiResponder } from '../utils/response.common'
-import { EHttpStatuses } from '../utils/contants'
+import { EHttpStatuses } from '../utils/constants'
 
 export const errorHandler = (
   err: any,

@@ -1,6 +1,6 @@
 import { Response } from 'express'
 import { ApiResponse } from '../interfaces/response.interface'
-import { EHttpStatuses } from './contants'
+import { EHttpStatuses } from './constants'
 
 export class ApiResponder {
   static success<T>(

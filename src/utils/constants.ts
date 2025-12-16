@@ -137,3 +137,30 @@ export enum EHttpStatuses {
   InternalServerError = 500,
   ServiceUnavailable = 503,
 }
+
+export const TOKEN_CONFIG = {
+  ACCESS_TOKEN_EXPIRATION: process.env.JWT_ACCESS_EXPIRATION || '15m',
+  REFRESH_TOKEN_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION || '7d',
+  MAX_ACTIVE_TOKENS: parseInt(process.env.MAX_ACTIVE_TOKENS || '5'),
+}
+
+export const OTP_CONFIG = {
+  ENABLED: process.env.OTP_ENABLED === 'true',
+  EXPIRATION: parseInt(process.env.OTP_EXPIRATION || '300'), // seconds
+  MAX_ATTEMPTS: parseInt(process.env.OTP_MAX_ATTEMPTS || '3'),
+  RATE_LIMIT: parseInt(process.env.OTP_RATE_LIMIT || '3'), // requests per 15 min
+  LENGTH: 6,
+}
+
+export const REDIS_KEYS = {
+  REFRESH_TOKEN: (tokenHash: string) => `refresh_token:${tokenHash}`,
+  OTP_RATE_LIMIT: (userId: number) => `otp_rate_limit:${userId}`,
+  OTP_ATTEMPTS: (userId: number) => `otp_attempts:${userId}`,
+}
+
+export const RATE_LIMIT_CONFIG = {
+  REFRESH_ENDPOINT: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // 10 requests per window
+  },
+}

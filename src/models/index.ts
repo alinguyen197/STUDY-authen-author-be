@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize'
+import { Sequelize, Op } from 'sequelize'
 import User from './user.model'
 import RefreshToken from './refreshToken.model'
 import Otp from './otp.model'
@@ -19,6 +19,7 @@ const sequelize = config.url
 const db = {
   Sequelize,
   sequelize,
+  Op,
   User: User.initModel(sequelize),
   RefreshToken: RefreshToken.initModel(sequelize),
   Otp: Otp.initModel(sequelize),

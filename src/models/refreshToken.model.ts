@@ -17,12 +17,12 @@ class RefreshToken extends Model {
   static associate(models: any) {
     RefreshToken.belongsTo(models.User, {
       foreignKey: 'userId',
-      // as: 'user',
+      as: 'user',
     })
 
     RefreshToken.belongsTo(RefreshToken, {
       foreignKey: 'replacedBy',
-      // as: 'replacement',
+      as: 'replacement',
     })
   }
 
