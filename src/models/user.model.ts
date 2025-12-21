@@ -10,6 +10,8 @@ class User extends Model {
   public name!: string
   public email!: string
   public password!: string
+  public otpEnabled!: boolean // User có bật 2FA không
+  public otpVerified!: boolean // Đã verify setup OTP chưa
   // timestamps
   public readonly createdAt!: Date
   public readonly updatedAt!: Date

@@ -38,3 +38,13 @@ export interface LoginResponse {
     username: string
   }
 }
+
+// ✅ Thêm interface cho response yêu cầu OTP
+export interface LoginOTPRequiredResponse {
+  requireOTP: true
+  otpId: string
+  message: string
+}
+
+// Union type cho login response
+export type LoginResult = LoginResponse | LoginOTPRequiredResponse
