@@ -1,10 +1,9 @@
+import jwt from 'jsonwebtoken'
 import { IUser } from '../interfaces'
 import User from '../models/user.model'
-import { ApiResponder } from '../utils/response.common'
 import { checkFormatEmail } from '../utils'
 import { parseError } from '../utils/parseError.common'
 import { comparePassword, hashPassword } from '../utils/utils.common'
-import jwt from 'jsonwebtoken'
 
 const handleLogin = (data: IUser) => {
   return new Promise(async (resolve, reject) => {
@@ -68,12 +67,6 @@ const handleLogin = (data: IUser) => {
   })
 }
 
-const checkEmailExists = async (email: string) => {
-  try {
-  } catch (error) {}
-}
-
 export default {
   handleLogin,
-  checkEmailExists,
 }

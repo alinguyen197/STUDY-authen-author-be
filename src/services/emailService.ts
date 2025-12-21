@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { parseError } from '../utils'
 
 class EmailService {
   private transporter
@@ -16,22 +17,28 @@ class EmailService {
   }
 
   async sendOTP(email: string, otp: string) {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to: email,
-      subject: 'Your OTP Login Code',
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>OTP Login Code</h2>
-          <p>Your OTP code is:</p>
-          <h1 style="color: #4CAF50; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
-          <p>This code will expire in ${process.env.OTP_EXPIRATION || 300} seconds.</p>
-          <p>If you didn't request this code, please ignore this email.</p>
-        </div>
-      `,
-    }
-
-    await this.transporter.sendMail(mailOptions)
+    return new Promise(async (resolve, reject) => {
+      try {
+        const mailOptions = {
+          from: process.env.EMAIL_FROM,
+          to: email,
+          subject: 'Your OTP Login Code',
+          html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>OTP Login Code</h2>
+            <p>Your OTP code is:</p>
+            <h1 style="color: #4CAF50; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
+            <p>This code will expire in ${process.env.OTP_EXPIRATION || 300} seconds.</p>
+            <p>If you didn't request this code, please ignore this email.</p>
+          </div>
+        `,
+        }
+        const info = await this.transporter.sendMail(mailOptions)
+        resolve(info)
+      } catch (error) {
+        reject(parseError(error))
+      }
+    })
   }
 
   async sendSecurityAlert(email: string, message: string) {

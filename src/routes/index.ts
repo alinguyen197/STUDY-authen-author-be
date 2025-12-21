@@ -3,7 +3,7 @@ import authRouters from './authRouters'
 import userRouters from './userRouters'
 
 const initWebRoutes = (app: Application) => {
-  app.use('/api', authRouters)
+  app.use('/api/auth', authRouters)
   app.use('/api/user', userRouters)
 }
 

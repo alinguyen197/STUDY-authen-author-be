@@ -8,5 +8,6 @@ const router = express.Router()
 
 router.post('/login', authController.login)
 router.post('/refresh-token', authController.login)
+router.post('/otp/request', authController.otp)
 
 export default router

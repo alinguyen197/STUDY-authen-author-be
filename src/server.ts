@@ -1,6 +1,7 @@
-import express, { Application } from 'express'
 import dotenv from 'dotenv'
+dotenv.config()
 
+import express, { Application } from 'express'
 import initWebRoutes from './routes'
 import cors from 'cors'
 import { connectDB } from './config/connectDB'
@@ -9,7 +10,6 @@ import redisClient from './config/redis'
 
 const PORT = process.env.PORT || 4000
 
-dotenv.config()
 const app: Application = express()
 app.use(cors({ origin: true, credentials: true })) // Cấu hình CORS
 

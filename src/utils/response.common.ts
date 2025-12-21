@@ -5,7 +5,7 @@ import { EHttpStatuses } from './constants'
 export class ApiResponder {
   static success<T>(
     res: Response,
-    data: T,
+    data?: T,
     message = 'Success',
     statusCode = EHttpStatuses.OK,
     meta?: ApiResponse['meta']
