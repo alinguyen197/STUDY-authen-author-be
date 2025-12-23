@@ -1,13 +1,10 @@
-'use strict'
-
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('otps', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('otp_codes', {
       id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
       },
       userId: {
         type: Sequelize.INTEGER,
@@ -16,41 +13,54 @@ module.exports = {
           model: 'users',
           key: 'id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      otpHash: {
+      code: {
+        type: Sequelize.STRING(6),
+        allowNull: false,
+      },
+      codeHash: {
         type: Sequelize.STRING(255),
+        allowNull: false,
+      },
+      purpose: {
+        type: Sequelize.ENUM('login', 'enable_2fa', 'disable_2fa'),
         allowNull: false,
       },
       expiresAt: {
         type: Sequelize.DATE,
         allowNull: false,
       },
-      attempts: {
-        type: Sequelize.INTEGER,
-        defaultValue: 0,
-      },
       verified: {
         type: Sequelize.BOOLEAN,
+        allowNull: false,
         defaultValue: false,
       },
-      createdAt: {
-        allowNull: false,
+      verifiedAt: {
         type: Sequelize.DATE,
+        allowNull: true,
+      },
+      attempts: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
       },
       updatedAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
       },
     })
 
-    await queryInterface.addIndex('otps', ['userId'])
-    await queryInterface.addIndex('otps', ['otpHash'])
-    await queryInterface.addIndex('otps', ['expiresAt'])
+    await queryInterface.addIndex('otp_codes', ['userId', 'purpose'])
+    await queryInterface.addIndex('otp_codes', ['codeHash'])
+    await queryInterface.addIndex('otp_codes', ['expiresAt'])
   },
 
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('otps')
+  down: async (queryInterface) => {
+    await queryInterface.dropTable('otp_codes')
   },
 }

@@ -1,66 +1,71 @@
 import jwt from 'jsonwebtoken'
 import { IUser } from '../interfaces'
 import User from '../models/user.model'
-import { checkFormatEmail } from '../utils'
+import { ApiResponder, checkFormatEmail } from '../utils'
 import { parseError } from '../utils/parseError.common'
 import { comparePassword, hashPassword } from '../utils/utils.common'
+import { TOKEN_CONFIG } from '../utils/constants'
+import { TokenUtils } from '../utils/token.utils'
 
-const handleLogin = (data: IUser) => {
+const login = (payload: any) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const { ip, user, deviceInfo } = payload
       // Validate
-      if (!data || !data.email) {
+      if (!user || !user.email) {
         reject({
           type: 'ValidationError',
-          details: { email: 'Email is required' },
+          message: 'Email is required',
         })
       }
 
-      if (!checkFormatEmail(data.email)) {
+      if (!checkFormatEmail(user.email)) {
         reject({
           type: 'ValidationError',
           message: 'Email invalid format',
         })
       }
 
-      if (!data || !data.password) {
+      if (!user || !user.password) {
         reject({
           type: 'ValidationError',
-          details: { password: 'Password is required' },
+          message: 'Password is required',
         })
       }
-
-      const user = await User.findOne({
-        where: { email: data.email },
+      // find user in database
+      const userDB = await User.findOne({
+        where: { email: user.email },
       })
 
-      if (!user) {
+      if (!userDB) {
         reject({
           type: 'NotFoundError',
           message: 'User not exist',
         })
-      }
+      } else {
+        const data = userDB.get({ plain: true })
+        const pass = await hashPassword(data.password)
 
-      const checkPassword = await comparePassword(
-        data.password ?? '',
-        await hashPassword(user?.password ?? '')
-      )
-      if (!checkPassword) {
-        reject({
-          type: 'AuthError',
-          message: 'Invalid password',
-        })
-      }
-      const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'your_secret_key'
-      const payload = { id: user?.id, email: user?.email }
-      const token = jwt.sign(payload, JWT_SECRET_KEY, {
-        expiresIn: '5m',
-      })
+        const isPasswordValid = await comparePassword(user.password, pass)
+        if (!isPasswordValid) {
+          reject({
+            type: 'ValidationError',
+            message: 'Password not correct',
+          })
+        }
 
-      resolve({
-        ...payload,
-        token,
-      })
+        // check 2FA
+        if (user?.otpEnabled) {
+        } else {
+          // generate token + refreshToken
+          const payloadToken = {
+            email: data.email,
+            userId: data.id,
+          }
+          const accessToken = TokenUtils.generateAccessToken(payloadToken)
+          resolve(TokenUtils.verifyAccessToken(accessToken))
+        }
+      }
     } catch (error: any) {
       reject(parseError(error))
     }
@@ -68,5 +73,5 @@ const handleLogin = (data: IUser) => {
 }
 
 export default {
-  handleLogin,
+  login,
 }

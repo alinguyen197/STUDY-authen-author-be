@@ -1,13 +1,10 @@
-'use strict'
-
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('refresh_tokens', {
       id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
       },
       userId: {
         type: Sequelize.INTEGER,
@@ -16,7 +13,6 @@ module.exports = {
           model: 'users',
           key: 'id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       tokenHash: {
@@ -25,7 +21,7 @@ module.exports = {
         unique: true,
       },
       deviceInfo: {
-        type: Sequelize.STRING(500),
+        type: Sequelize.STRING,
         allowNull: true,
       },
       ipAddress: {
@@ -38,6 +34,7 @@ module.exports = {
       },
       revoked: {
         type: Sequelize.BOOLEAN,
+        allowNull: false,
         defaultValue: false,
       },
       revokedAt: {
@@ -47,28 +44,23 @@ module.exports = {
       replacedBy: {
         type: Sequelize.INTEGER,
         allowNull: true,
-        references: {
-          model: 'refresh_tokens',
-          key: 'id',
-        },
       },
       createdAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
       },
       updatedAt: {
-        allowNull: false,
         type: Sequelize.DATE,
+        allowNull: false,
       },
     })
 
     await queryInterface.addIndex('refresh_tokens', ['userId'])
     await queryInterface.addIndex('refresh_tokens', ['tokenHash'])
     await queryInterface.addIndex('refresh_tokens', ['expiresAt'])
-    await queryInterface.addIndex('refresh_tokens', ['revoked'])
   },
 
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('refresh_tokens')
   },
 }

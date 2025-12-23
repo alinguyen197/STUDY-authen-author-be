@@ -1,24 +1,27 @@
 import { Model, DataTypes, Sequelize } from 'sequelize'
 
-class Otp extends Model {
+class OTPCode extends Model {
   public id!: number
   public userId!: number
-  public otpHash!: string
+  public code!: string // Mã OTP (6 chữ số)
+  public codeHash!: string // Hash của OTP (bảo mật)
+  public purpose!: 'login' | 'enable_2fa' | 'disable_2fa' // Mục đích sử dụng
   public expiresAt!: Date
-  public attempts!: number
   public verified!: boolean
+  public verifiedAt!: Date | null
+  public attempts!: number // Số lần thử sai (chống brute-force)
   public readonly createdAt!: Date
   public readonly updatedAt!: Date
 
   static associate(models: any) {
-    Otp.belongsTo(models.User, {
+    OTPCode.belongsTo(models.User, {
       foreignKey: 'userId',
       as: 'user',
     })
   }
 
   static initModel(sequelize: Sequelize) {
-    Otp.init(
+    OTPCode.init(
       {
         id: {
           type: DataTypes.INTEGER,
@@ -28,38 +31,58 @@ class Otp extends Model {
         userId: {
           type: DataTypes.INTEGER,
           allowNull: false,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onDelete: 'CASCADE',
         },
-        otpHash: {
+        code: {
+          type: DataTypes.STRING(6),
+          allowNull: false,
+        },
+        codeHash: {
           type: DataTypes.STRING(255),
+          allowNull: false,
+        },
+        purpose: {
+          type: DataTypes.ENUM('login', 'enable_2fa', 'disable_2fa'),
           allowNull: false,
         },
         expiresAt: {
           type: DataTypes.DATE,
           allowNull: false,
         },
-        attempts: {
-          type: DataTypes.INTEGER,
-          defaultValue: 0,
-        },
         verified: {
           type: DataTypes.BOOLEAN,
+          allowNull: false,
           defaultValue: false,
+        },
+        verifiedAt: {
+          type: DataTypes.DATE,
+          allowNull: true,
+        },
+        attempts: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          defaultValue: 0,
         },
       },
       {
         sequelize,
-        tableName: 'otps',
+        modelName: 'OTPCode',
+        tableName: 'otp_codes',
         timestamps: true,
         indexes: [
-          { fields: ['userId'] },
-          { fields: ['otpHash'] },
+          { fields: ['userId', 'purpose'] },
+          { fields: ['codeHash'] },
           { fields: ['expiresAt'] },
         ],
       }
     )
 
-    return Otp
+    return OTPCode
   }
 }
 
-export default Otp
+export default OTPCode

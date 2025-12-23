@@ -1,16 +1,15 @@
 import { Model, DataTypes, Sequelize } from 'sequelize'
-import User from './user.model'
 
 class RefreshToken extends Model {
   public id!: number
   public userId!: number
-  public tokenHash!: string
+  public tokenHash!: string // Hash của refresh token (bảo mật)
   public deviceInfo!: string | null
   public ipAddress!: string | null
   public expiresAt!: Date
   public revoked!: boolean
   public revokedAt!: Date | null
-  public replacedBy!: number | null
+  public replacedBy!: number | null // ID của token thay thế (audit trail)
   public readonly createdAt!: Date
   public readonly updatedAt!: Date
 
@@ -18,11 +17,6 @@ class RefreshToken extends Model {
     RefreshToken.belongsTo(models.User, {
       foreignKey: 'userId',
       as: 'user',
-    })
-
-    RefreshToken.belongsTo(RefreshToken, {
-      foreignKey: 'replacedBy',
-      as: 'replacement',
     })
   }
 
@@ -37,6 +31,11 @@ class RefreshToken extends Model {
         userId: {
           type: DataTypes.INTEGER,
           allowNull: false,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
+          onDelete: 'CASCADE',
         },
         tokenHash: {
           type: DataTypes.STRING(255),
@@ -44,11 +43,11 @@ class RefreshToken extends Model {
           unique: true,
         },
         deviceInfo: {
-          type: DataTypes.STRING(500),
+          type: DataTypes.STRING,
           allowNull: true,
         },
         ipAddress: {
-          type: DataTypes.STRING(45),
+          type: DataTypes.STRING(45), // IPv6 support
           allowNull: true,
         },
         expiresAt: {
@@ -57,6 +56,7 @@ class RefreshToken extends Model {
         },
         revoked: {
           type: DataTypes.BOOLEAN,
+          allowNull: false,
           defaultValue: false,
         },
         revokedAt: {
@@ -66,18 +66,21 @@ class RefreshToken extends Model {
         replacedBy: {
           type: DataTypes.INTEGER,
           allowNull: true,
+          references: {
+            model: 'refresh_tokens',
+            key: 'id',
+          },
         },
       },
       {
         sequelize,
-        modelName: 'RefreshTokens',
+        modelName: 'RefreshToken',
         tableName: 'refresh_tokens',
         timestamps: true,
         indexes: [
           { fields: ['userId'] },
-          { fields: ['tokenHash'], unique: true },
+          { fields: ['tokenHash'] },
           { fields: ['expiresAt'] },
-          { fields: ['revoked'] },
         ],
       }
     )

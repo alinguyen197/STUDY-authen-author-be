@@ -1,6 +1,6 @@
 export interface IUser {
   email: string
-  password?: string
+  password: string
 }
 
 interface JwtPayload {
@@ -16,6 +16,7 @@ export interface TokenPayload {
   email: string
   iat?: number
   exp?: number
+  [key: string]: any
 }
 
 export interface RefreshTokenData {

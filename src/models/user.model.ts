@@ -45,6 +45,16 @@ class User extends Model {
           type: DataTypes.STRING,
           allowNull: false,
         },
+        otpEnabled: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+        },
+        otpVerified: {
+          type: DataTypes.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+        },
       },
       {
         sequelize, // kết nối đã khởi tạo

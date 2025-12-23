@@ -30,7 +30,8 @@
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
     "redis": "^5.10.0",
-    "sequelize-typescript": "^2.1.6"
+    "sequelize-typescript": "^2.1.6",
+    "ua-parser-js": "^2.0.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
