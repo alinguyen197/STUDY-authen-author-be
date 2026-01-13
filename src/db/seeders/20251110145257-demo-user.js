@@ -5,11 +5,22 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.bulkInsert('users', [
       {
-        // name: 'John Doe',
-        // email: 'alinguyen197@gmail.com',
-        // password: '123123',
-        // createdAt: new Date(),
-        // updatedAt: new Date(),
+        name: 'John Doe',
+        email: 'khoana15@fpt.com',
+        password: '123123',
+        otpEnabled: true,
+        otpVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+       {
+        name: 'Ali Nguyen',
+        email: 'alinguyen@gmail.com',
+        password: '123123',
+        otpEnabled: true,
+        otpVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ])
   },

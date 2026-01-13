@@ -11,6 +11,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     // Lấy IP (xử lý proxy)
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
     const ua = new UAParser(req.headers['user-agent']).getResult()
+
     const payload = {
       user: req.body,
       deviceInfo: {
@@ -21,10 +22,21 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       ip,
     }
 
-    console.log(payload)
-    const user = await authServices.login(payload)
+    // set refresh token in httpOnly cookie
+    const { accessToken, refreshToken, ...rest } = (await authServices.login(
+      payload
+    )) as any
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
 
-    return ApiResponder.success(res, user)
+    return ApiResponder.success(res, {
+      accessToken,
+      ...rest,
+    })
   } catch (error: any) {
     next(error)
   }
