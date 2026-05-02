@@ -75,6 +75,40 @@ class EmailService {
 
     await this.transporter.sendMail(mailOptions)
   }
+
+  async send2FAEnabledNotification(email: string) {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: '2FA Enabled',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>2FA Enabled</h2>
+          <p>Two-factor authentication has been enabled on your account.</p>
+          <p>Time: ${new Date().toLocaleString()}</p>
+        </div>
+      `,
+    }
+
+    await this.transporter.sendMail(mailOptions)
+  }
+
+  async send2FADisabledNotification(email: string) {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: '2FA Disabled',
+      html: `     
+        <div style="font-family: Arial, sans-serif; padding: 20px;">      
+          <h2>2FA Disabled</h2>             
+          <p>Two-factor authentication has been disabled on your account.</p>
+          <p>Time: ${new Date().toLocaleString()}</p>
+        </div>
+      `,
+    }
+
+    await this.transporter.sendMail(mailOptions)
+  }
 }
 
 export default new EmailService()

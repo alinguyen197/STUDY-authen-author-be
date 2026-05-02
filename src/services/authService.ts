@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken'
-import { IUser, LoginResponse } from '../interfaces'
+import { LoginResponse } from '../interfaces'
 import User from '../models/user.model'
 import { ApiResponder, checkFormatEmail } from '../utils'
-import { parseError } from '../utils/parseError.common'
 import { comparePassword, hashPassword } from '../utils/utils.common'
 import { OTP_CONFIG, REDIS_KEYS, TOKEN_CONFIG } from '../utils/constants'
 import { TokenUtils } from '../utils/token.utils'
@@ -13,75 +12,60 @@ import { Transaction } from 'sequelize'
 import emailService from './emailService'
 
 class AuthService {
-  login(payload: any) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const { ip, user, deviceInfo } = payload
-        // Validate
-        if (!user || !user.email) {
-          reject({
-            type: 'ValidationError',
-            message: 'Email is required',
-          })
-        }
+  async login(payload: any) {
+    const { ip, user, deviceInfo } = payload
 
-        if (!checkFormatEmail(user.email)) {
-          reject({
-            type: 'ValidationError',
-            message: 'Email invalid format',
-          })
-        }
-
-        if (!user || !user.password) {
-          reject({
-            type: 'ValidationError',
-            message: 'Password is required',
-          })
-        }
-        // find user in database
-        //  userDB.get({ plain: true }) => convert to javascript object
-        const userDB = await User.findOne({
-          where: { email: user.email },
-        })
-
-        if (!userDB) {
-          reject({
-            type: 'NotFoundError',
-            message: 'User not exist',
-          })
-        } else {
-          const pass = await hashPassword(userDB.password)
-
-          const isPasswordValid = await comparePassword(user.password, pass)
-          if (!isPasswordValid) {
-            reject({
-              type: 'ValidationError',
-              message: 'Password not correct',
-            })
-          }
-
-          // check 2FA
-          if (userDB?.otpEnabled) {
-            // send OTP and require OTP verification
-            const otpId = await this.sendLoginOTP(userDB)
-
-            resolve({
-              requireOTP: true,
-              otpId,
-            })
-          } else {
-            const tokenData = await this.generateTokensForUser(
-              userDB,
-              deviceInfo,
-              ip
-            )
-            resolve(tokenData)
-          }
-        }
-      } catch (error: any) {
-        reject(parseError(error))
+    if (!user || !user.email) {
+      throw {
+        type: 'ValidationError',
+        message: 'Email is required',
       }
+    }
+
+    if (!checkFormatEmail(user.email)) {
+      throw {
+        type: 'ValidationError',
+        message: 'Email invalid format',
+      }
+    }
+
+    if (!user || !user.password) {
+      throw {
+        type: 'ValidationError',
+        message: 'Password is required',
+      }
+    }
+
+    const userDB = await User.findOne({
+      where: { email: user.email },
     })
+
+    if (!userDB) {
+      throw {
+        type: 'NotFoundError',
+        message: 'User not exist',
+      }
+    }
+
+    const pass = await hashPassword(userDB.password)
+    const isPasswordValid = await comparePassword(user.password, pass)
+
+    if (!isPasswordValid) {
+      throw {
+        type: 'ValidationError',
+        message: 'Password not correct',
+      }
+    }
+
+    if (userDB?.otpEnabled && userDB?.otpVerified) {
+      const otpId = await this.sendLoginOTP(userDB)
+      return {
+        requireOTP: true,
+        otpId,
+      }
+    }
+
+    return this.generateTokensForUser(userDB, deviceInfo, ip)
   }
 
   // ==================== TOKEN GENERATION ====================
@@ -183,24 +167,22 @@ class AuthService {
 
   // ==================== 2FA HANDLING SEND OTP ====================
   private async sendLoginOTP(user: any): Promise<string> {
-    // 1. Check rate limit
     const rateLimitKey = REDIS_KEYS.OTP_RATE_LIMIT(user.id)
     const requestCount = await redisClient.get(rateLimitKey)
 
     if (requestCount && parseInt(requestCount) >= OTP_CONFIG.RATE_LIMIT) {
-      throw new Error('Too many OTP requests. Please try again later.')
+      throw {
+        type: 'ValidationError',
+        message: 'Too many OTP requests. Please try again later.',
+      }
     }
 
-    // 2. Generate OTP
     const otp = TokenUtils.generateOTP()
     const otpHash = TokenUtils.hashOTP(otp)
-
     const expiresAt = new Date(Date.now() + OTP_CONFIG.EXPIRATION * 1000)
 
-    // 3. Delete old OTPs
     await db.Otp.destroy({ where: { userId: user.id } })
 
-    // 4. Save new OTP
     const otpRecord = await db.Otp.create({
       userId: user.id,
       code: otp,
@@ -211,15 +193,65 @@ class AuthService {
       purpose: 'login',
     })
 
-    // 5. Update rate limit
     await redisClient.incr(rateLimitKey)
-    await redisClient.expire(rateLimitKey, 15 * 60) // 15 minutes
+    await redisClient.expire(rateLimitKey, 15 * 60)
 
-    // 6. Send OTP via email
     await emailService.sendOTP(user.email, otp)
 
-    // 7. Return OTP ID (để verify sau)
     return otpRecord.id.toString()
+  }
+
+  // ==================== 2FA HANDLING VERIFY OTP ====================
+  async verifyLoginOTP(
+    otpId: string,
+    otp: string,
+    deviceInfo?: string,
+    ipAddress?: string
+  ): Promise<LoginResponse> {
+    const otpRecord = await db.Otp.findByPk(otpId)
+    if (!otpRecord) {
+      throw {
+        type: 'ValidationError',
+        message: 'Invalid OTP session',
+      }
+    }
+
+    const otpHash = TokenUtils.hashOTP(otp)
+    if (otpRecord.codeHash !== otpHash) {
+      await otpRecord.increment('attempts')
+
+      if (otpRecord.attempts + 1 >= OTP_CONFIG.MAX_ATTEMPTS) {
+        await otpRecord.destroy()
+        throw {
+          type: 'ValidationError',
+          message: 'Maximum OTP attempts exceeded',
+        }
+      }
+
+      throw {
+        type: 'ValidationError',
+        message: 'Invalid OTP',
+      }
+    }
+
+    if (new Date() > otpRecord.expiresAt) {
+      await otpRecord.destroy()
+      throw {
+        type: 'ValidationError',
+        message: 'OTP has expired',
+      }
+    }
+
+    const user = await db.User.findByPk(otpRecord.userId)
+    if (!user) {
+      throw {
+        type: 'NotFoundError',
+        message: 'User not found',
+      }
+    }
+
+    await otpRecord.destroy()
+    return this.generateTokensForUser(user, deviceInfo, ipAddress)
   }
 }
 

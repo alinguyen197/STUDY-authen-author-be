@@ -1,6 +1,13 @@
 import { Request, Response, NextFunction } from 'express'
 import { ApiResponder } from '../utils/response.common'
 import { EHttpStatuses } from '../utils/constants'
+import { parseError } from '../utils/parseError.common'
+import {
+  DatabaseError,
+  UniqueConstraintError,
+  ValidationError as SequelizeValidationError,
+} from 'sequelize'
+import { TokenExpiredError } from 'jsonwebtoken'
 
 export const errorHandler = (
   err: any,
@@ -8,6 +15,20 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  // Parse library errors (Sequelize, JWT) first
+  if (
+    err instanceof SequelizeValidationError ||
+    err instanceof UniqueConstraintError ||
+    err instanceof DatabaseError ||
+    err instanceof TokenExpiredError ||
+    err.name === 'SequelizeValidationError' ||
+    err.name === 'SequelizeUniqueConstraintError' ||
+    err.name === 'SequelizeDatabaseError' ||
+    err.name === 'TokenExpiredError'
+  ) {
+    err = parseError(err)
+  }
+
   switch (err.type) {
     case 'ValidationError':
       return ApiResponder.validationError(res, err)
@@ -31,6 +52,9 @@ export const errorHandler = (
         'Unauthorized',
         EHttpStatuses.Unauthorized
       )
+
+    case 'UniqueConstraintError':
+      return ApiResponder.validationError(res, err)
 
     default:
       return ApiResponder.error(

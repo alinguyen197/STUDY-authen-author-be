@@ -5,6 +5,7 @@ import { ApiResponder } from '../utils/response.common'
 import emailService from '../services/emailService'
 // get infor request
 import { UAParser } from 'ua-parser-js'
+
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Lấy dữ liệu từ request body
@@ -42,19 +43,51 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
-const otp = async (req: Request, res: Response, next: NextFunction) => {
+const verifyOTPFromUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { email, password } = req.body
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+    const ua = new UAParser(req.headers['user-agent']).getResult()
 
-    await emailService.sendOTP(email, '12345')
+    const deviceInfo = {
+      type: ua.device.type ?? 'desktop',
+      vendor: ua.device.vendor ?? null,
+      model: ua.device.model ?? null,
+    }
 
-    return ApiResponder.success(res)
+    const { accessToken, refreshToken, ...rest } =
+      await authServices.verifyLoginOTP(
+        req.body.otpId,
+        req.body.otp,
+        JSON.stringify(deviceInfo),
+        JSON.stringify(ip)
+      )
+    return ApiResponder.success(res, {
+      accessToken,
+      ...rest,
+    })
   } catch (error) {
     next(error)
   }
 }
 
+// const otp = async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const { email, password } = req.body
+
+//     await emailService.sendOTP(email, '12345')
+
+//     return ApiResponder.success(res)
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
 export default {
   login,
-  otp,
+  verifyOTPFromUser,
+  // otp,
 }

@@ -109,3 +109,188 @@ npx sequelize-cli db:migrate:undo
 ✅ Token Hashing: Hash SHA-256 trước khi lưu DB
 ✅ Audit trail với trường replacedBy
 </pre>
+
+---
+
+## 🚨 Error Handling Architecture
+
+### Cũ vs Mới
+
+#### ❌ OLD Pattern (Promise Constructor)
+
+```typescript
+login(payload: any) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // ...
+      reject({ type: 'ValidationError', message: '...' })
+    } catch (error) {
+      reject(parseError(error))
+    }
+  })
+}
+```
+
+**Vấn đề:**
+
+- ❌ Code phức tạp, nested, khó bảo trì
+- ❌ `reject()` không flow vào Express middleware
+- ❌ Error handling không centralized
+- ❌ Khó debug, không consistent
+
+#### ✅ NEW Pattern (Async/Await)
+
+```typescript
+async login(payload: any) {
+  // ...
+  if (!user) {
+    throw {
+      type: 'ValidationError',
+      message: 'Email is required'
+    }
+  }
+  // ...
+}
+```
+
+**Lợi ích:**
+
+- ✅ Code sạch, dễ đọc, dễ maintain
+- ✅ Errors flow lên middleware → centralized handling
+- ✅ Structured error format: `{ type, message, details }`
+- ✅ Consistent error handling across codebase
+
+### Error Flow
+
+```
+Service (async/await)
+  └─ throw { type, message }
+     └─ OR throw Sequelize/JWT instance errors
+
+        ↓ (bubble up)
+
+Controller (try/catch)
+  └─ catch (error) → next(error)
+
+        ↓
+
+Express Middleware (errorHandler.ts)
+  ├─ Detect library errors (Sequelize, JWT)
+  ├─ parseError() → structured format
+  └─ switch(err.type) → ApiResponder
+
+        ↓
+
+HTTP Response
+  └─ 400/401/500 + error details
+```
+
+### Error Types & HTTP Status
+
+| Error Type              | HTTP Status      | Handler             | From                                   |
+| ----------------------- | ---------------- | ------------------- | -------------------------------------- |
+| `ValidationError`       | 400 Bad Request  | `validationError()` | Input validation, Sequelize validation |
+| `NotFoundError`         | 404 Not Found    | `notFound()`        | Resource not found                     |
+| `AuthError`             | 401 Unauthorized | `unauthorized()`    | Login failed, invalid credentials      |
+| `TokenExpiredError`     | 401 Unauthorized | `error()`           | JWT token expired                      |
+| `DatabaseError`         | 500 Server Error | `dbError()`         | Database connection, query errors      |
+| `UniqueConstraintError` | 400 Bad Request  | `validationError()` | Duplicate key, unique constraint       |
+| `UnknownError`          | 500 Server Error | `error()`           | Unexpected errors                      |
+
+### When to use `parseError()`
+
+**✅ Dùng khi:**
+
+- Bắt được `SequelizeValidationError` instance
+- Bắt được `SequelizeUniqueConstraintError` instance
+- Bắt được `TokenExpiredError` (JWT)
+- Bắt được `SequelizeDatabaseError` instance
+
+**❌ Không dùng khi:**
+
+- Throw custom business logic errors
+- Throw application-level errors (OTP validation, login failed, etc)
+- Các error này nên throw trực tiếp: `throw { type, message }`
+
+### Middleware Auto-Parsing
+
+```typescript
+// errorHandler.ts automatically detects and parses:
+if (err instanceof SequelizeValidationError) {
+  err = parseError(err) // ← Auto parse library errors
+}
+
+// Then switch by type:
+switch (err.type) {
+  case 'ValidationError':
+    return ApiResponder.validationError(res, err)
+  // ...
+}
+```
+
+### Best Practices
+
+1. **Service Layer** (authService.ts):
+   - ✅ Use `async/await`
+   - ✅ Throw `{ type, message }` for business logic
+   - ✅ Let library errors bubble up (middleware will parse)
+
+2. **Controller Layer** (authController.ts):
+   - ✅ Use `try/catch`
+   - ✅ Pass error to middleware: `next(error)`
+   - ❌ Don't parse or transform errors here
+
+3. **Error Handler** (errorHandler.ts):
+   - ✅ Parse library errors first
+   - ✅ Use switch/case for routing
+   - ✅ Call appropriate ApiResponder methods
+
+### Example: OTP Verification
+
+```typescript
+// Service: throw structured errors
+async verifyLoginOTP(otpId: string, otp: string) {
+  const otpRecord = await db.Otp.findByPk(otpId)
+  if (!otpRecord) {
+    throw {
+      type: 'ValidationError',
+      message: 'Invalid OTP session'
+    }
+  }
+
+  if (otpRecord.codeHash !== TokenUtils.hashOTP(otp)) {
+    throw {
+      type: 'ValidationError',
+      message: 'Invalid OTP'
+    }
+  }
+  // ...
+}
+
+// Controller: pass to middleware
+const verifyOTPFromUser = async (req, res, next) => {
+  try {
+    const result = await authServices.verifyLoginOTP(...)
+    return ApiResponder.success(res, result)
+  } catch (error) {
+    next(error)  // ← Middleware will handle
+  }
+}
+
+// Middleware: centralized handling
+export const errorHandler = (err, req, res, next) => {
+  // If Sequelize error, parse it
+  if (err instanceof SequelizeError) {
+    err = parseError(err)
+  }
+
+  // Route by type
+  switch (err.type) {
+    case 'ValidationError':
+      return ApiResponder.validationError(res, err)
+    case 'NotFoundError':
+      return ApiResponder.notFound(res, err.message)
+    // ...
+  }
+}
+```
