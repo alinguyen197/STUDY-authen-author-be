@@ -36,6 +36,8 @@ npx sequelize-cli migration:generate --name add-isactive-to-user
 npx sequelize-cli db:migrate
 npx sequelize-cli db:migrate:undo
 
+// chạy 1 file : npx sequelize-cli db:migrate --name <tên_file_migration_của_bạn.js>
+
 👉5. Tạo Seeder (tạo data) : npx sequelize-cli seed:generate --name demo-user
 
 - Run các seeder : npx sequelize-cli db:seed:all
